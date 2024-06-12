@@ -1,12 +1,15 @@
-import config.Parameter;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.TypeReference;
+import config.ParameterTest;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import query.QuadTreeSearch;
 import structure.Quadtree;
+import structure.QueryRange;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -18,26 +21,67 @@ import java.util.*;
  */
 public class QueryTest {
     public static void main(String[] args) {
-        testQuery10WithQueryTime();
+//        generateQueryRange(100);
+
+//        ArrayList<QueryRange> ranges = readQueryRange(100);
+//        testQuery10WithQueryTime(6);
+
+//        Quadtree quadtree = new Quadtree(Parameter.xMin, Parameter.yMin, Parameter.xMax, Parameter.yMax);
+//        QuadTreeSearch quadTreeSearch = new QuadTreeSearch(quadtree);
+//        quadTreeSearch.createQuadtreeIndex();
+//        quadTreeSearch.saveQuadtreeToIndexFile();
+//        quadTreeSearch.readQuadtreeToIndexFile(10);
+//        quadTreeSearch.query(-20, -20, 10, 10, 10);
+
+//        quadTreeSearch.saveQuadtreeToFile();
+        testQuery100WithQueryTime();
 //        testQuery10WithAccuracy();
     }
-    /**
-     * @Description:进行10次查询，每次查询的范围是(-10,-10,5,5)
-     * @param
-     * @return void
-     */
 
-    private static void testQuery10WithQueryTime(){
-        Quadtree quadtree = new Quadtree(Parameter.xMin, Parameter.yMin, Parameter.xMax, Parameter.yMax);
+    private static void testQuery10WithQueryTime(int layer) {
+        Quadtree quadtree = new Quadtree(ParameterTest.xMin, ParameterTest.yMin, ParameterTest.xMax, ParameterTest.yMax);
         QuadTreeSearch quadTreeSearch = new QuadTreeSearch(quadtree);
         ArrayList<HashMap<Integer, Double>> resList = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             HashMap<Integer, Double> res = new HashMap<>();
-            for (int j = 5; j < 15; j++) {
-                quadTreeSearch.readQuadTreeFromFile(j);
-                Parameter.quadTreeMaxLayer= j;
+//                quadTreeSearch.readQuadTreeFromFile(j);
+            quadTreeSearch.readQuadtreeToIndexFile(layer);
+            ParameterTest.quadTreeMaxLayer = layer;
+            long start = System.nanoTime();
+            List<Integer> queryRes = quadTreeSearch.query(-20, -20, 10, 10, 10);
+            long end = System.nanoTime();
+            res.put(layer, (end - start) / 1000000.0);
+            resList.add(res);
+        }
+        HashMap<Integer, Double> avgQueryTime = avgQueryTime(resList);
+        saveQueryTimeRes(avgQueryTime);
+    }
+
+    /**
+     * @param
+     * @return void
+     * @Description:进行10次查询，每次查询的范围是(-10,-10,5,5)
+     */
+
+    private static void testQuery100WithQueryTime() {
+        Quadtree quadtree = new Quadtree(ParameterTest.xMin, ParameterTest.yMin, ParameterTest.xMax, ParameterTest.yMax);
+        QuadTreeSearch quadTreeSearch = new QuadTreeSearch(quadtree);
+        ArrayList<HashMap<Integer, Double>> resList = new ArrayList<>();
+        HashMap<Integer, QueryRange> ranges = readQueryRange(100);
+        for (int i = 0; i < 100; i++) {
+            HashMap<Integer, Double> res = new HashMap<>();
+            QueryRange queryRange = ranges.get(i);
+            double x1 = queryRange.getX1();
+            double x2 = queryRange.getX2();
+            double y1 = queryRange.getY1();
+            double y2 = queryRange.getY2();
+            System.out.println(i + ":{" + "x1:" + x1 + " y1:" + y1 + " x2:" + x2 + " y2:" + y2 + "}");
+            for (int j = 5; j < 13; j++) {
+//                quadTreeSearch.readQuadTreeFromFile(j);
+                quadTreeSearch.readQuadtreeToIndexFile(j);
+                ParameterTest.quadTreeMaxLayer = j;
                 long start = System.nanoTime();
-                List<Integer> queryRes = quadTreeSearch.query(-20, -20, 10, 10, 10);
+                quadTreeSearch.query(x1, y1, x2, y2, 100);
                 long end = System.nanoTime();
                 res.put(j, (end - start) / 1000000.0);
             }
@@ -47,17 +91,24 @@ public class QueryTest {
         saveQueryTimeRes(avgQueryTime);
     }
 
-    private static void testQuery10WithAccuracy(){
-        Quadtree quadtree = new Quadtree(Parameter.xMin, Parameter.yMin, Parameter.xMax, Parameter.yMax);
+    private static void testQuery100WithAccuracy() {
+        Quadtree quadtree = new Quadtree(ParameterTest.xMin, ParameterTest.yMin, ParameterTest.xMax, ParameterTest.yMax);
         QuadTreeSearch quadTreeSearch = new QuadTreeSearch(quadtree);
         ArrayList<HashMap<Integer, Double>> resList = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
+        HashMap<Integer, QueryRange> ranges = readQueryRange(100);
+        for (int i = 0; i < 100; i++) {
             HashMap<Integer, Double> res = new HashMap<>();
+            QueryRange queryRange = ranges.get(i);
+            double x1 = queryRange.getX1();
+            double x2 = queryRange.getX2();
+            double y1 = queryRange.getY1();
+            double y2 = queryRange.getY2();
+            System.out.println(i + ":{" + "x1:" + x1 + " y1:" + y1 + " x2:" + x2 + " y2:" + y2 + "}");
             for (int j = 5; j < 15; j++) {
-                Parameter.quadTreeMaxLayer= j;
+                ParameterTest.quadTreeMaxLayer = j;
                 quadTreeSearch.readQuadTreeFromFile(j);
-                List<Integer> queryRes = quadTreeSearch.query(-20, -20, 10, 10, 10);
-                double accuracy = getAccuracy(queryRes);
+                List<Integer> queryRes = quadTreeSearch.query(x1, y1, x2, y2, 100);
+                double accuracy = getAccuracy(queryRes, i);
                 res.put(j, accuracy);
             }
             resList.add(res);
@@ -65,15 +116,46 @@ public class QueryTest {
         HashMap<Integer, Double> avgAccuracy = avgAccuracy(resList);
         saveAccuracyRes(avgAccuracy);
     }
-    
-    private static double getAccuracy(List<Integer> queryRes){
-        int[] arr={997, 70, 204, 218, 219, 224, 429, 676, 706, 774};
+
+    private static void generateQueryRange(int num) {
+//        ArrayList<QueryRange> rangeList  = new ArrayList<>();
+        HashMap<Integer, QueryRange> rangeMap = new HashMap<>();
+        for (int i = 0; i < num; i++) {
+            rangeMap.put(i, new QueryRange());
+        }
+        saveQueryRange(rangeMap);
+    }
+
+    private static void saveQueryRange(HashMap<Integer, QueryRange> rangeMap) {
+        String jsonString = JSON.toJSONString(rangeMap);
+        try (FileWriter file = new FileWriter(ParameterTest.queryRangeFilePath + rangeMap.size() + ".json")) {
+            file.write(jsonString);
+            System.out.println("Serialized data is saved in " + ParameterTest.queryRangeFilePath + rangeMap.size() + ".json");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static HashMap<Integer, QueryRange> readQueryRange(int num) {
+        HashMap<Integer, QueryRange> rangeMap = new HashMap<>();
+        try {
+            String content = new String(Files.readAllBytes(Paths.get(ParameterTest.queryRangeFilePath + num + ".json")));
+            rangeMap = JSON.parseObject(content, new TypeReference<HashMap<Integer, QueryRange>>() {});
+            System.out.println("Deserialized data from " + ParameterTest.queryRangeFilePath + num + ".json");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return rangeMap;
+    }
+
+    private static double getAccuracy(List<Integer> queryRes, int k) {
+        int[] arr = {997, 70, 204, 218, 219, 224, 429, 676, 706, 774};
         List<Integer> list = new ArrayList<>();
         for (int i : arr) {
             list.add(i);
         }
         long count = queryRes.stream().filter(list::contains).count();
-        return count*1.0/queryRes.size();
+        return count * 1.0 / queryRes.size();
     }
 
     private static HashMap<Integer, Double> avgQueryTime(ArrayList<HashMap<Integer, Double>> resList) {
@@ -134,10 +216,10 @@ public class QueryTest {
         return avgMap;
     }
 
-    private static void saveQueryTimeRes(Map<Integer, Double> data){
+    private static void saveQueryTimeRes(Map<Integer, Double> data) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         String date = LocalDate.now().format(formatter);
-        String basePath = Parameter.resultQueryTimePath + date;
+        String basePath = ParameterTest.resultQueryTimePath + date;
         String filePath = basePath + ".csv";
         // 检查当天文件是否存在,存在就添加一个-数字后缀
         int count = 1;
@@ -159,10 +241,10 @@ public class QueryTest {
         }
     }
 
-    private static void saveAccuracyRes(Map<Integer, Double> data){
+    private static void saveAccuracyRes(Map<Integer, Double> data) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         String date = LocalDate.now().format(formatter);
-        String basePath = Parameter.resultAccuracyPath + date;
+        String basePath = ParameterTest.resultAccuracyPath + date;
         String filePath = basePath + ".csv";
         // 检查当天文件是否存在,存在就添加一个-数字后缀
         int count = 1;

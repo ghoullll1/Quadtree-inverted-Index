@@ -4,6 +4,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * @author: hehe
  * @create: 2024-06-05 10:51
@@ -12,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
-public class Point {
+public class Point implements Serializable {
     double x, y;
 
     @Override

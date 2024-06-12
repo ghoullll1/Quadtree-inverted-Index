@@ -1,10 +1,11 @@
 package structure;
 
-import config.Parameter;
+import config.ParameterTest;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -15,7 +16,7 @@ import java.util.*;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
-public class QuadtreeNode {
+public class QuadtreeNode implements Serializable {
     private double xMin, yMin, xMax, yMax;
     private List<Point> points;
     private boolean divided;
@@ -63,10 +64,10 @@ public class QuadtreeNode {
     }
 
     public void insert(Point point) {
-        if (layer <= Parameter.quadTreeMaxLayer) {
+        if (layer <= ParameterTest.quadTreeMaxLayer) {
             if (contains(point)) {
                 datasetCounts.put(point.getDatasetId(), datasetCounts.getOrDefault(point.getDatasetId(), 0) + 1);
-                if (layer+1 < Parameter.quadTreeMaxLayer&&!divided) {
+                if (layer+1 < ParameterTest.quadTreeMaxLayer&&!divided) {
                     subdivide();
                 }
                 if(children!=null){
@@ -84,7 +85,7 @@ public class QuadtreeNode {
     }
 
     public void query(double xMin, double yMin, double xMax, double yMax, List<QuadtreeNode> found) {
-        if(isContainedByRange(xMin, yMin, xMax, yMax)||(this.layer+1==Parameter.quadTreeMaxLayer)&&intersects(xMin, yMin, xMax, yMax)){
+        if(isContainedByRange(xMin, yMin, xMax, yMax)||(this.layer+1== ParameterTest.quadTreeMaxLayer)&&intersects(xMin, yMin, xMax, yMax)){
             found.add(this);
         }else {
             if (divided) {

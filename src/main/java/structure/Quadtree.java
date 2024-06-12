@@ -1,18 +1,14 @@
 package structure;
 
-import config.Parameter;
+import config.ParameterTest;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.Value;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 /**
@@ -23,10 +19,10 @@ import java.util.stream.Collectors;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
-public class Quadtree{
+public class Quadtree implements Serializable {
     private QuadtreeNode root;
 
-    public static int maxLayer= Parameter.quadTreeMaxLayer;
+    public static int maxLayer= ParameterTest.quadTreeMaxLayer;
 
     public Quadtree(double xMin, double yMin, double xMax, double yMax) {
         this.root = new QuadtreeNode(xMin, yMin, xMax, yMax, 0);
