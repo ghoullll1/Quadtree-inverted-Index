@@ -5,10 +5,14 @@ import com.alibaba.fastjson2.JSONObject;
 import config.ParameterTest;
 import structure.Point;
 import structure.Quadtree;
+import utils.NumericNameComparator;
 
+import java.awt.geom.Point2D;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import static com.alibaba.fastjson2.JSONWriter.Feature.LargeObject;
@@ -31,6 +35,7 @@ public class QuadTreeSearch {
     }
 
     public void saveQuadtreeToFile() {
+        Point2D.Double point = new Point2D.Double(1, 2);
         JSON.config(LargeObject, true);
         String index = JSONObject.toJSONString(quadtree);
         try (FileWriter file = new FileWriter(ParameterTest.quadTreeIndexFilePath + ParameterTest.quadTreeMaxLayer + ".json")) {
@@ -84,29 +89,50 @@ public class QuadTreeSearch {
         return quadtree;
     }
 
+    /**
+     * @Description:创建QuadTreeGrid索引
+     * @param
+     * @return void
+     */
+
     public void createQuadtreeIndex() {
         File folder = new File(ParameterTest.datasetsPath.get(1));
         if (folder.isDirectory() && folder.exists()) {
             File[] files = folder.listFiles();
+            Arrays.sort(files, Comparator.comparing(File::getName, new NumericNameComparator()));
             int num = Math.min(files.length, ParameterTest.datasetNum);
+            double sum=0.0;
             for (int i = 0; i < num; i++) {
                 System.out.println(i * 1.0 / num * 1.0 * 100 + "%");
                 // 将数据集插入到QuadTree中
-                readCSVAndInsertPoints(files[i].getAbsolutePath(), Integer.parseInt(files[i].getName().split("\\.")[0]));
+                double totalTime = readCSVAndInsertPoints(files[i].getAbsolutePath(), Integer.parseInt(files[i].getName().split("\\.")[0]));
+                sum+=totalTime;
             }
+            System.out.println("Average Time: "+sum/num);
         }
     }
+    /**
+     * @Description:读取数据集并将数据集的每个点插入到QuadTree中
+     * @param filePath
+     * @param datasetId
+     * @return void
+     */
 
-    private void readCSVAndInsertPoints(String filePath, int datasetId) {
+    private double readCSVAndInsertPoints(String filePath, int datasetId) {
         try {
             List<String> lines = Files.readAllLines(Paths.get(filePath));
+            double totalTime=0.0;
             for (String line : lines) {
                 String[] parts = line.split(",");
                 double latitude = Double.parseDouble(parts[0]);
                 double longitude = Double.parseDouble(parts[1]);
                 Point point = new Point(latitude, longitude, datasetId);
+                double start=System.nanoTime();
                 quadtree.insert(point);
+                double end=System.nanoTime();
+                totalTime+=(end-start)/1000000.0;
             }
+            return totalTime;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

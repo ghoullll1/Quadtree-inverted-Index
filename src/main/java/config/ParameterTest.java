@@ -12,7 +12,7 @@ public class ParameterTest {
     public static double xMin = -180.0, yMin = -90.0, xMax = 180.0, yMax = 90.0;
 
     public static int datasetNum = 30000;
-    public static int quadTreeMaxLayer = 12;
+    public static int quadTreeMaxLayer = 15;
 
     public static List<String> name_datasets = Arrays.asList("public", "identifiable", "trackable");
     public static List<String> datasetsPath = Arrays.asList("D:\\Desktop\\experiments\\datasets\\public", "D:\\Desktop\\experiments\\datasets\\identifiable", "D:\\Desktop\\experiments\\datasets\\trackable");
@@ -21,4 +21,5 @@ public class ParameterTest {
     public static String queryRangeFilePath = "D:\\Desktop\\experiments\\range\\";
     public static String resultAccuracyPath = "D:\\Desktop\\experiments\\result\\accuracy\\";
     public static String resultQueryTimePath = "D:\\Desktop\\experiments\\result\\queryTime\\";
+    public static String correctResultPath = "D:\\Desktop\\experiments\\result\\correct\\";
 }
