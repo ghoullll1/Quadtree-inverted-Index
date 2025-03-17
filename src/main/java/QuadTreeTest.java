@@ -1,6 +1,6 @@
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import config.Parameter;
+import config.ParameterTest;
 import structure.Point;
 import structure.Quadtree;
 import utils.Time;
@@ -23,7 +23,7 @@ import static com.alibaba.fastjson2.JSONWriter.Feature.LargeObject;
 public class QuadTreeTest {
     public static void main(String[] args) throws IOException {
         // 初始化QuadTree
-        Quadtree quadtree = new Quadtree(Parameter.xMin, Parameter.yMin, Parameter.xMax, Parameter.yMax);
+        Quadtree quadtree = new Quadtree(ParameterTest.xMin, ParameterTest.yMin, ParameterTest.xMax, ParameterTest.yMax);
 
         // 读取所有数据集
 //        for (int i = 0; i < 1000; i++) {
@@ -43,6 +43,7 @@ public class QuadTreeTest {
         time.end();
         System.out.println("queryTime:" + time.getTime());
         System.out.println("Topk Dataset:" + topkList);
+
     }
 
     /**

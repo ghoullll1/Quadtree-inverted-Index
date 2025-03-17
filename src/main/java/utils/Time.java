@@ -1,6 +1,7 @@
 package utils;
 
 import lombok.Data;
+import structure.Quadtree;
 
 /**
  * @author: hehe
