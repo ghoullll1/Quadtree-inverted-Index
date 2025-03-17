@@ -3,6 +3,7 @@ package query;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import config.ParameterTest;
+import lombok.Data;
 import structure.Point;
 import structure.Quadtree;
 import utils.NumericNameComparator;
@@ -22,6 +23,7 @@ import static com.alibaba.fastjson2.JSONWriter.Feature.LargeObject;
  * @create: 2024-06-07 12:58
  * @Description:
  */
+@Data
 public class QuadTreeSearch {
     private Quadtree quadtree;
 
@@ -96,7 +98,7 @@ public class QuadTreeSearch {
      */
 
     public void createQuadtreeIndex() {
-        File folder = new File(ParameterTest.datasetsPath.get(1));
+        File folder = new File(ParameterTest.datasetsPath.get(2));
         if (folder.isDirectory() && folder.exists()) {
             File[] files = folder.listFiles();
             Arrays.sort(files, Comparator.comparing(File::getName, new NumericNameComparator()));

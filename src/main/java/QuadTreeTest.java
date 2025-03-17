@@ -43,6 +43,7 @@ public class QuadTreeTest {
         time.end();
         System.out.println("queryTime:" + time.getTime());
         System.out.println("Topk Dataset:" + topkList);
+
     }
 
     /**

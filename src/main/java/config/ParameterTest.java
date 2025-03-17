@@ -9,10 +9,10 @@ import java.util.List;
  * @Description:
  */
 public class ParameterTest {
-    public static double xMin = -180.0, yMin = -90.0, xMax = 180.0, yMax = 90.0;
+    public static float xMin = (float) -180.0, yMin = (float) -90.0, xMax = (float) 180.0, yMax = (float) 90.0;
 
     public static int datasetNum = 30000;
-    public static int quadTreeMaxLayer = 15;
+    public static int quadTreeMaxLayer = 10;
 
     public static List<String> name_datasets = Arrays.asList("public", "identifiable", "trackable");
     public static List<String> datasetsPath = Arrays.asList("D:\\Desktop\\experiments\\datasets\\public", "D:\\Desktop\\experiments\\datasets\\identifiable", "D:\\Desktop\\experiments\\datasets\\trackable");

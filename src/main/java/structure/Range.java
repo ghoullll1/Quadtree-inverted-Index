@@ -1,6 +1,7 @@
 package structure;
 
 import com.github.davidmoten.rtree.geometry.Geometries;
+import utils.Time;
 
 import java.util.Set;
 
@@ -9,7 +10,7 @@ import java.util.Set;
  * @create: 2024-06-07 12:44
  * @Description:
  */
-public class Range {
+public class Range{
     private Rectangle MBR;// 最小边界矩形
 
     /**

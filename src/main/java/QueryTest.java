@@ -3,14 +3,12 @@ import com.alibaba.fastjson2.TypeReference;
 import config.ParameterTest;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.lucene.util.RamUsageEstimator;
 import query.BasicSearch;
 import query.QuadTreeSearch;
-import structure.PolygonRange;
 import structure.Quadtree;
-import structure.QuadtreeNode;
 import structure.QueryRange;
 
-import java.awt.geom.Point2D;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -25,9 +23,9 @@ import java.util.*;
  */
 public class QueryTest {
     public static void main(String[] args) {
-        basicSearch(10,30,"num30000-1000");
+        basicSearch(10,30,"1000");
 
-//        generateQueryRangeWithTargetArea(100,100,"100");
+//        generateQueryRangeWithTargetArea(100,2000,"2000");
 //        generateQueryRangeWithScope(100,"20000-40000range");
 
 //        ArrayList<QueryRange> ranges = readQueryRange(100);
@@ -36,13 +34,14 @@ public class QueryTest {
 //        Quadtree quadtree = new Quadtree(ParameterTest.xMin, ParameterTest.yMin, ParameterTest.xMax, ParameterTest.yMax);
 //        QuadTreeSearch quadTreeSearch = new QuadTreeSearch(quadtree);
 //        quadTreeSearch.createQuadtreeIndex();
+//        getSizeOfIndex(quadTreeSearch.getQuadtree().getRoot());
 //        quadTreeSearch.saveQuadtreeToIndexFile();
 //        quadTreeSearch.readQuadtreeToIndexFile(10);
 //        quadTreeSearch.query(-20, -20, 10, 10, 10);
 
 //        quadTreeSearch.saveQuadtreeToFile();
 //        quadTreeGridQueryWithQueryTime(10,"1000");
-//        quadTreeGridQueryWithAccuracy(10,"1000");
+//        quadTreeGridQueryWithAccuracy(100,"1000");
 //        List<Point2D.Double> pts = PolygonRange.generateRandomPolygon(5);
 //        Point2D.Double point = new Point2D.Double(119.245584,39.068196);
 //        long start = System.nanoTime();
@@ -66,17 +65,39 @@ public class QueryTest {
         BasicSearch basicSearch = new BasicSearch(1);
         HashMap<Integer, QueryRange> ranges = readQueryRange(name);
         HashMap<Integer, List<Integer>> correctMap = new HashMap<>();
+        HashMap<Integer, Double> res = new HashMap<>();
         for (int i = 0; i < n; i++) {
+            long start = System.nanoTime();
             List<Integer> topkList = basicSearch.query(ranges.get(i), k);
+            long end = System.nanoTime();
+            res.put(i, (end - start) / 1000000.0);
             correctMap.put(i, topkList);
         }
-        String jsonString = JSON.toJSONString(correctMap);
-        try (FileWriter file = new FileWriter(ParameterTest.correctResultPath + name + ".json")) {
-            file.write(jsonString);
-            System.out.println("Serialized data is saved in " + ParameterTest.correctResultPath + name + ".json");
-        } catch (IOException e) {
-            e.printStackTrace();
+        List<Double> values = new ArrayList<>(res.values());
+
+        // 找到最大值和最小值
+        double maxValue = Collections.max(values);
+        double minValue = Collections.min(values);
+
+        // 移除最大值和最小值
+        values.remove(maxValue);
+        values.remove(minValue);
+
+        // 计算剩余值的平均值
+        double sum = 0.0;
+        for (double value : values) {
+            sum += value;
         }
+
+        double average = sum / values.size();
+        System.out.println("Average: " + average);
+//        String jsonString = JSON.toJSONString(correctMap);
+//        try (FileWriter file = new FileWriter(ParameterTest.correctResultPath + name + ".json")) {
+//            file.write(jsonString);
+//            System.out.println("Serialized data is saved in " + ParameterTest.correctResultPath + name + ".json");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 
     private static void quadTreeGridQueryWithQueryTime(int n,String name){
@@ -112,7 +133,7 @@ public class QueryTest {
         QuadTreeSearch quadTreeSearch = new QuadTreeSearch(quadtree);
         ArrayList<HashMap<Integer, Double>> resList = new ArrayList<>();
         HashMap<Integer, QueryRange> ranges = readQueryRange(name);
-        HashMap<Integer, List<Integer>> correctRes = readCorrectResult("1000-top40");
+        HashMap<Integer, List<Integer>> correctRes = readCorrectResult("num30000-1000-top30");
         for (int i = 0; i < n; i++) {
             HashMap<Integer, Double> res = new HashMap<>();
             QueryRange queryRange = ranges.get(i);
@@ -121,12 +142,13 @@ public class QueryTest {
             double y1 = queryRange.getY1();
             double y2 = queryRange.getY2();
             System.out.println(i + ":{" + "x1:" + x1 + " y1:" + y1 + " x2:" + x2 + " y2:" + y2 + "}");
-            for (int j = 15; j < 16; j++) {
+            for (int j = 8; j < 13; j++) {
                 ParameterTest.quadTreeMaxLayer = j;
                 quadTreeSearch.readQuadtreeToIndexFile(j);
                 List<Integer> queryRes = quadTreeSearch.query(x1, y1, x2, y2, 30);
                 System.out.println("queryRes"+queryRes);
                 double accuracy = getAccuracy(queryRes, correctRes.get(i));
+                System.out.println("accuracy"+accuracy);
                 res.put(j, accuracy);
             }
             resList.add(res);
@@ -305,5 +327,10 @@ public class QueryTest {
             throw new RuntimeException(e);
         }
         return correctMap;
+    }
+
+    private static void getSizeOfIndex(Object obj){
+        String s = RamUsageEstimator.humanSizeOf(obj);
+        System.out.println("index size:"+s);
     }
 }

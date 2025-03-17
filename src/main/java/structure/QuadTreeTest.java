@@ -22,7 +22,7 @@ import static com.alibaba.fastjson2.JSONWriter.Feature.LargeObject;
 public class QuadTreeTest {
     public static void main(String[] args) throws IOException {
         // 定义QuadTree范围
-        double xMin = -180, yMin = -90, xMax = 180, yMax = 90;
+        float xMin = -180, yMin = -90, xMax = 180, yMax = 90;
         Quadtree quadtree = new Quadtree(xMin, yMin, xMax, yMax);
 
         // 读取所有数据集
